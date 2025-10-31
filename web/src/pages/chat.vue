@@ -10,7 +10,7 @@
         </div>
         <div class="pre-chat-input-container">
           <div class="chatc-up">
-            <textarea v-model="input" @keydown.enter.prevent="handleSend" placeholder="输入咨询的相关问题..."
+            <textarea v-model="input" @keydown.enter.prevent="handleSend" placeholder="发送消息"
               class="pre-chat-input" rows="3" ref="initialInput"></textarea>
           </div>
           <div class="chatc-down">
