@@ -9,21 +9,22 @@
           <h2 class="pre-chat-msg-h2" ref="typeitElement"></h2>
         </div>
         <div class="pre-chat-input-container">
-          <textarea
-            v-model="input"
-            @keydown.enter.prevent="handleSend"
-            placeholder="输入咨询的相关问题..."
-            class="pre-chat-input"
-            rows="3"
-            ref="initialInput"
-          ></textarea>
-          <button 
-            @click="handleSend"
-            class="pre-chat-send-btn"
-            :disabled="!input.trim()"
-          >
-            发送
-          </button>
+          <div class="chatc-up">
+            <textarea v-model="input" @keydown.enter.prevent="handleSend" placeholder="输入咨询的相关问题..."
+              class="pre-chat-input" rows="3" ref="initialInput"></textarea>
+          </div>
+          <div class="chatc-down">
+            <div style="flex: 1 1;"></div>
+            <div class="chatc-tools">
+              <div class="chatc-tools-button">
+                  <button @click="handleSend" class="pre-chat-send-btn" :disabled="!input.trim()" aria-label="">
+                    <span style="display: flex;align-items: center; justify-content: center;">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="none" viewBox="0 0 24 24"><path fill="currentColor" d="m3.543 8.883 7.042-7.047a2 2 0 0 1 2.828 0l7.043 7.046a1 1 0 0 1 0 1.415l-.701.701a1 1 0 0 1-1.414 0L13.3 5.956v15.792a1 1 0 0 1-1 1h-.99a1 1 0 0 1-1-1V6.342l-4.654 4.656a1 1 0 0 1-1.414 0l-.7-.7a1 1 0 0 1 0-1.415"></path></svg>
+                    </span>
+                  </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       <div v-else class="chat-container" key="chat">
@@ -149,19 +150,31 @@ export default {
   width: 100%;
   max-width: 600px;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   gap: 12px;
+  background-color: #fff;
+  padding: 12px;
+  border-radius: 14px;
 }
+
+.chatc-down {
+  align-items: flex-end;
+  display: flex;
+}
+
 .pre-chat-input {
+  width: 96%;
   flex: 1;
   padding: 12px;
   font-size: 18px;
-  border: 2px solid #40c057;
-  border-radius: 8px;
+  /* border: 2px solid #40c057; */
+  /* border-radius: 8px; */
+  border: none;
   resize: none;
   outline: none;
   box-shadow: 0 2px 8px rgba(34, 230, 93, 0.08);
 }
+
 .pre-chat-send-btn {
   padding: 12px 24px;
   background-color: #40c057;
@@ -179,6 +192,7 @@ export default {
   display: flex;
   flex-direction: column;
 }
+
 .chat-container {
   flex: 1;
   display: flex;
@@ -188,6 +202,7 @@ export default {
   padding-top: 80px;
   padding-bottom: 0;
 }
+
 .chat-history {
   width: 100%;
   max-width: 700px;
@@ -198,6 +213,7 @@ export default {
   flex-direction: column;
   gap: 18px;
 }
+
 .bubble {
   max-width: 80%;
   padding: 18px 24px;
@@ -210,12 +226,14 @@ export default {
   margin-left: 16px;
   margin-right: 16px;
 }
+
 .bubble.user {
   background: #40c057;
   color: #fff;
   align-self: flex-end;
   border-bottom-right-radius: 4px;
 }
+
 .bubble.ai {
   background: #fff;
   color: #1e293b;
@@ -223,12 +241,14 @@ export default {
   border-bottom-left-radius: 4px;
   border: 1.5px solid #40c057;
 }
+
 .bubble-label {
   font-size: 14px;
   font-weight: 700;
   margin-right: 8px;
   color: #22c55e;
 }
+
 .chat-input-bar {
   position: fixed;
   left: 0;
@@ -242,6 +262,7 @@ export default {
   padding: 18px 0;
   z-index: 100;
 }
+
 .chat-input {
   width: 480px;
   padding: 14px 18px;
@@ -254,9 +275,11 @@ export default {
   outline: none;
   transition: border 0.2s;
 }
+
 .chat-input:focus {
   border: 2px solid #22c55e;
 }
+
 .send-btn {
   padding: 14px 32px;
   border: none;
@@ -268,6 +291,7 @@ export default {
   cursor: pointer;
   transition: background 0.2s;
 }
+
 .send-btn:hover {
   background-color: #22c55e;
 }
@@ -285,19 +309,25 @@ export default {
   border: none;
   cursor: pointer;
 }
+
 .vue-link-btn:hover {
   background: #22c55e;
   color: #fff !important;
 }
 
-.fade-slide-enter-active, .fade-slide-leave-active {
+.fade-slide-enter-active,
+.fade-slide-leave-active {
   transition: opacity 0.5s, transform 0.5s;
 }
-.fade-slide-enter-from, .fade-slide-leave-to {
+
+.fade-slide-enter-from,
+.fade-slide-leave-to {
   opacity: 0;
   transform: translateY(40px);
 }
-.fade-slide-leave-from, .fade-slide-enter-to {
+
+.fade-slide-leave-from,
+.fade-slide-enter-to {
   opacity: 1;
   transform: translateY(0);
 }

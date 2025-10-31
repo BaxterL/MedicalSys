@@ -260,6 +260,7 @@ export default {
       circle.filter(d => relatedNodes.has(d.name)).style("display", "inline");
       text.filter(d => relatedNodes.has(d.name)).style("display", "inline");
       this.updateCounts();
+      console.log(`节点数量: ${this.nodeCount},关系边数量: ${this.edgeCount}`)
     },
     // AI转换的函数我不会别找我
     toggleAll() {
@@ -276,7 +277,6 @@ export default {
       const { circle, edges_line } = this.d3Elements;
       this.nodeCount = circle ? circle.filter(function() { return d3.select(this).style("display") !== "none"; }).size() : 0;
       this.edgeCount = edges_line ? edges_line.filter(function() { return d3.select(this).style("display") !== "none"; }).size() : 0;
-      console.log(`节点数量: ${this.nodeCount},关系边数量: ${this.edgeCount}`)
     },
     highlightNode(nodeName) {
       // 高亮节点（绿色边框/放大）

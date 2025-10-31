@@ -6,4 +6,5 @@
 /prepare_data
 /data
 
+/src/__pycache__
 /web/.vscode
