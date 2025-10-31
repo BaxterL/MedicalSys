@@ -1,643 +1,362 @@
 <template>
-  <div class="page-container">
-    <!-- 顶部导航栏 -->
-    <header class="header">
-      <img 
-        class="logo" 
-        src="static/img/logo.png" 
-        alt="Medical KG System"
-      />
-      <nav class="main-nav">
-        <ul class="main-nav-list">
-          <li class="search-box">
-            <input
-              class="search-txt"
-              type="text"
-              placeholder="输入查询内容..."
-              v-model="queryText"
-              @keyup.enter="searchKG"
-            />
-            <button class="search-btn" @click="searchKG">
-              <i class="icon iconfont icon-search"></i>
-            </button>
-          </li>
-          <li>
-            <a class="main-nav-link" href="#" @click.prevent="resetGraph">重置图谱</a>
-          </li>
-          <li>
-            <a class="main-nav-link" href="#" @click.prevent="showHelp">使用帮助</a>
-          </li>
-        </ul>
-      </nav>
-    </header>
-
-    <!-- 主要内容区 -->
-    <main class="main-content">
-      <!-- 左侧边栏 -->
-      <div class="sidebar">
-        <div class="sidebar-header">
-          <h2>查询结果</h2>
-          <div class="result-count">找到 {{ resultCount }} 个相关实体</div>
-        </div>
-        
-        <ul class="entity-list">
-          <li 
-            v-for="(entity, index) in entities" 
-            :key="index"
-            class="entity-item"
-            @click="focusEntity(entity)"
-          >
-            <div class="entity-name">{{ entity.name }}</div>
-            <div class="entity-type">{{ entity.type }}</div>
-          </li>
-        </ul>
-      </div>
-
-      <!-- 中间图谱区域 -->
-      <div class="graph-container">
-        <div id="graphArea"></div>
-      </div>
-
-      <!-- 右侧信息面板 -->
-      <div class="info-panel">
-        <div v-if="selectedEntity" class="entity-detail">
-          <h3 class="detail-title">{{ selectedEntity.name }}</h3>
-          <div class="detail-type">{{ selectedEntity.type }}</div>
-          
-          <div class="detail-section">
-            <h4>属性信息</h4>
-            <ul class="property-list">
-              <li v-for="(value, key) in selectedEntity.properties" :key="key">
-                <span class="property-key">{{ key }}:</span>
-                <span class="property-value">{{ value }}</span>
-              </li>
-            </ul>
-          </div>
-          
-          <div class="detail-section">
-            <h4>关系信息</h4>
-            <ul class="relation-list">
-              <li v-for="(relation, idx) in selectedEntity.relations" :key="idx">
-                <span class="relation-name">{{ relation.name }}</span>
-                <span class="relation-target" @click="focusEntity(relation.target)">{{ relation.target.name }}</span>
-              </li>
-            </ul>
-          </div>
-        </div>
-        
-        <div v-else class="empty-state">
-          <p>请点击图谱中的实体查看详情</p>
-        </div>
-      </div>
-    </main>
-
-    <!-- 底部控制栏 -->
-    <div class="control-bar">
-      <div class="control-group">
-        <button class="control-btn" @click="zoomIn">
-          <i class="icon iconfont icon-zoom-in"></i> 放大
+  <div class="chat-container">
+    <!-- 初始状态：仅居中的聊天框 -->
+    <div v-if="messages.length === 0" class="initial-state">
+      <div class="initial-input-container">
+        <textarea
+          v-model="newMessage"
+          @keydown.enter.prevent="sendMessage"
+          placeholder="输入消息开始对话..."
+          class="initial-message-input"
+          rows="3"
+          ref="initialInput"
+        ></textarea>
+        <button 
+          @click="sendMessage"
+          class="initial-send-btn"
+          :disabled="!newMessage.trim()"
+        >
+          发送
         </button>
-        <button class="control-btn" @click="zoomOut">
-          <i class="icon iconfont icon-zoom-out"></i> 缩小
-        </button>
-        <button class="control-btn" @click="fitView">
-          <i class="icon iconfont icon-reset"></i> 适应视图
-        </button>
-      </div>
-      
-      <div class="layout-controls">
-        <label class="layout-label">布局方式:</label>
-        <select class="layout-select" v-model="layoutType" @change="changeLayout">
-          <option value="force">力导向布局</option>
-          <option value="circular">环形布局</option>
-          <option value="hierarchical">层次布局</option>
-        </select>
       </div>
     </div>
 
-    <!-- 帮助弹窗 -->
-    <div v-if="showHelpModal" class="modal-backdrop">
-      <div class="modal">
-        <div class="modal-header">
-          <h3>使用帮助</h3>
-          <button class="close-btn" @click="showHelpModal = false">×</button>
+    <!-- 有消息后的状态 -->
+    <div v-else class="conversation-state">
+      <!-- 聊天记录区域 -->
+      <div class="chat-messages" ref="chatContainer">
+        <div class="messages-container">
+          <div 
+            v-for="(message, index) in messages" 
+            :key="index"
+            class="message-item"
+            :class="{ 
+              'user-message': message.isUser, 
+              'ai-message': !message.isUser
+            }"
+          >
+            <!-- 消息气泡 -->
+            <div class="message-bubble" :class="{ 'user-bubble': message.isUser, 'ai-bubble': !message.isUser }">
+              <p class="message-text">{{ message.text }}</p>
+              <div class="message-time">{{ formatTime(message.timestamp) }}</div>
+            </div>
+          </div>
         </div>
-        <div class="modal-content">
-          <p>1. 在顶部搜索框输入医疗实体名称进行查询</p>
-          <p>2. 点击左侧实体列表可定位到图谱中的实体</p>
-          <p>3. 点击图谱中的实体可在右侧查看详细信息</p>
-          <p>4. 可通过底部控制按钮调整图谱显示方式</p>
-        </div>
+      </div>
+
+      <!-- 底部输入区域 -->
+      <div class="bottom-input-area">
+        <textarea
+          v-model="newMessage"
+          @keydown.enter.prevent="sendMessage"
+          placeholder="输入消息..."
+          class="bottom-message-input"
+          rows="3"
+          ref="bottomInput"
+        ></textarea>
+        <button 
+          @click="sendMessage"
+          class="bottom-send-btn"
+          :disabled="!newMessage.trim()"
+        >
+          发送
+        </button>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import '../assets/lib/jquery-3.2.1/jquery-3.2.1.min.js'
-import '../assets/lib/interactive-graph-0.1.0/interactive-graph.min.js'
-
 export default {
-  name: 'MedicalKGView',
   data() {
     return {
-      queryText: '',
-      entities: [],
-      resultCount: 0,
-      selectedEntity: null,
-      graphApp: null,
-      layoutType: 'force',
-      showHelpModal: false
+      messages: [],
+      newMessage: ''
+    };
+  },
+  methods: {
+    sendMessage() {
+      const message = this.newMessage.trim();
+      if (!message) return;
+
+      // 添加用户消息
+      this.messages.push({
+        text: message,
+        isUser: true,
+        timestamp: new Date()
+      });
+
+      // 清空输入框
+      this.newMessage = '';
+
+      // 自动聚焦到底部输入框（如果是首次发送）
+      if (this.messages.length === 1) {
+        this.$nextTick(() => {
+          this.$refs.bottomInput.focus();
+        });
+      }
+
+      // 模拟AI回复
+      setTimeout(() => {
+        const aiReply = `这是对"${message}"的回复。你可以根据实际需求替换为真实的AI响应。`;
+        this.messages.push({
+          text: aiReply,
+          isUser: false,
+          timestamp: new Date()
+        });
+        
+        // 滚动到底部
+        this.scrollToBottom();
+      }, 800);
+
+      // 滚动到底部
+      this.scrollToBottom();
+    },
+    scrollToBottom() {
+      this.$nextTick(() => {
+        const chatContainer = this.$refs.chatContainer;
+        if (chatContainer) {
+          chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+      });
+    },
+    formatTime(timestamp) {
+      return timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
   },
   mounted() {
-    this.initGraph()
-  },
-  methods: {
-    // 初始化图谱
-    initGraph() {
-      igraph.i18n.setLanguage("chs");
-      this.graphApp = new igraph.GraphNavigator(
-        document.getElementById("graphArea"),
-        {
-          canvasBackground: "#ecf9ee",
-          nodes: {
-            color: "#40c057",
-            size: 20,
-            labelFontSize: 14
-          },
-          edges: {
-            color: "#a5d8a7",
-            width: 2,
-            labelFontSize: 12
-          },
-          groups: {
-            useSeqColors: false,
-            custom: {
-              疾病: { color: '#e53e3e' },
-              症状: { color: '#ed8936' },
-              药物: { color: '#3182ce' },
-              检查: { color: '#805ad5' },
-              治疗: { color: '#38a169' }
-            }
-          }
-        }
-      )
-
-      // 绑定实体点击事件
-      this.graphApp.on('nodeClick', (node) => {
-        this.fetchEntityDetail(node.id)
-      })
-
-      this.hideUselessControls()
-    },
-
-    // 隐藏不需要的控件
-    hideUselessControls() {
-      const toolBar = document.querySelector('.toolbarPanel')
-      const searchPanel = document.querySelector('.searchPanel')
-      
-      if (toolBar) toolBar.style.display = 'none'
-      if (searchPanel) searchPanel.style.display = 'none'
-    },
-
-    // 搜索知识图谱
-    searchKG() {
-      if (!this.queryText.trim()) return
-
-      // 实际项目中替换为真实接口
-      fetch(`/api/kg/search?query=${this.queryText}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.success) {
-            this.entities = data.entities
-            this.resultCount = data.entities.length
-            this.graphApp.loadGson(data.graphData)
-          }
-        })
-        .catch(err => console.error('搜索失败:', err))
-    },
-
-    // 聚焦实体
-    focusEntity(entity) {
-      this.graphApp.pickup([{ id: entity.id }])
-      this.fetchEntityDetail(entity.id)
-    },
-
-    // 获取实体详情
-    fetchEntityDetail(entityId) {
-      // 实际项目中替换为真实接口
-      fetch(`/api/kg/entity/${entityId}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.success) {
-            this.selectedEntity = data.entity
-          }
-        })
-    },
-
-    // 重置图谱
-    resetGraph() {
-      this.graphApp.clear()
-      this.entities = []
-      this.resultCount = 0
-      this.selectedEntity = null
-      this.queryText = ''
-    },
-
-    // 图谱控制方法
-    zoomIn() {
-      this.graphApp.zoomIn()
-    },
-    zoomOut() {
-      this.graphApp.zoomOut()
-    },
-    fitView() {
-      this.graphApp.fitView()
-    },
-    changeLayout() {
-      this.graphApp.setLayout(this.layoutType)
-    },
-
-    // 显示帮助
-    showHelp() {
-      this.showHelpModal = true
-    }
+    // 初始聚焦到居中的输入框
+    this.$nextTick(() => {
+      this.$refs.initialInput?.focus();
+    });
   }
-}
+};
 </script>
 
 <style scoped>
-.page-container {
-  display: flex;
-  flex-direction: column;
+.chat-container {
+  width: 100%;
   height: 100vh;
-  overflow: hidden;
-  background-color: #f8f9fa;
-}
-
-/* 头部样式 */
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: #ecf9ee;
-  height: 96px;
-  padding: 0 48px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  z-index: 10;
-}
-
-.logo {
-  height: 80px;
-}
-
-.main-nav-list {
-  list-style: none;
-  display: flex;
-  align-items: center;
-  gap: 24px;
-}
-
-.main-nav-link {
-  text-decoration: none;
-  color: #333;
-  font-weight: 500;
-  font-size: 16px;
-  transition: all 0.3s;
-  padding: 8px 12px;
-  border-radius: 4px;
-}
-
-.main-nav-link:hover {
-  color: #40c057;
-  background-color: rgba(64, 192, 87, 0.1);
-}
-
-/* 搜索框样式 */
-.search-box {
-  padding: 6px;
-  border-radius: 40px;
-  background-color: #40c057;
-  display: flex;
-  align-items: center;
-}
-
-.search-txt {
-  border: none;
-  background: none;
-  outline: none;
-  font-size: 16px;
-  color: #fff;
-  line-height: 1;
-  width: 0;
-  transition: width 0.4s;
-}
-
-.search-box:hover .search-txt {
-  width: 240px;
-  padding: 0 12px;
-}
-
-.search-txt::placeholder {
-  color: rgba(255, 255, 255, 0.8);
-}
-
-.search-btn {
-  background: none;
-  border: none;
-  color: #fff;
-  cursor: pointer;
-  padding: 4px;
-  border-radius: 50%;
-  transition: all 0.4s;
-}
-
-.search-box:hover .search-btn {
-  background-color: white;
-  color: #40c057;
-}
-
-/* 主内容区样式 */
-.main-content {
-  display: flex;
-  flex: 1;
+  background-color: #f9fafb;
   overflow: hidden;
 }
 
-/* 侧边栏样式 */
-.sidebar {
-  width: 280px;
-  background-color: #fff;
-  border-right: 1px solid #e9ecef;
+/* 初始状态样式 - 仅居中的聊天框 */
+.initial-state {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.initial-input-container {
+  width: 100%;
+  max-width: 600px;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  gap: 12px;
+  animation: fadeIn 0.5s ease-out;
 }
 
-.sidebar-header {
-  padding: 16px;
-  border-bottom: 1px solid #e9ecef;
-}
-
-.sidebar-header h2 {
-  color: #333;
-  font-size: 18px;
-  margin-bottom: 8px;
-}
-
-.result-count {
-  color: #666;
-  font-size: 14px;
-}
-
-.entity-list {
-  flex: 1;
-  overflow-y: auto;
-  padding: 8px;
-}
-
-.entity-item {
-  padding: 12px;
-  margin-bottom: 8px;
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.entity-item:hover {
-  background-color: #ecf9ee;
-  transform: translateY(-2px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.entity-name {
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 4px;
-}
-
-.entity-type {
-  font-size: 12px;
-  color: #666;
-  background-color: rgba(64, 192, 87, 0.1);
-  display: inline-block;
-  padding: 2px 8px;
+.initial-message-input {
+  width: 100%;
+  border: 1px solid #e5e7eb;
   border-radius: 12px;
+  padding: 16px;
+  font-size: 16px;
+  resize: none;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+  transition: all 0.2s ease;
+  box-sizing: border-box;
 }
 
-/* 图谱容器样式 */
-.graph-container {
-  flex: 1;
-  position: relative;
-  overflow: hidden;
-  background-color: #ecf9ee;
+.initial-message-input:focus {
+  outline: none;
+  border-color: #93c5fd;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
 }
 
-#graphArea {
-  width: 100%;
+.initial-send-btn {
+  align-self: flex-end;
+  padding: 10px 20px;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.initial-send-btn:disabled {
+  background-color: #93c5fd;
+  cursor: not-allowed;
+}
+
+.initial-send-btn:not(:disabled):hover {
+  background-color: #2563eb;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(59, 130, 246, 0.15);
+}
+
+/* 对话状态样式 - 有消息记录时 */
+.conversation-state {
+  display: flex;
+  flex-direction: column;
   height: 100%;
 }
 
-/* 信息面板样式 */
-.info-panel {
-  width: 320px;
-  background-color: #fff;
-  border-left: 1px solid #e9ecef;
+.chat-messages {
+  flex: 1;
   overflow-y: auto;
-  padding: 16px;
+  padding: 20px;
+  box-sizing: border-box;
+  animation: slideUp 0.3s ease-out;
 }
 
-.detail-title {
-  color: #333;
-  font-size: 20px;
+.messages-container {
+  max-width: 600px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.message-item {
+  display: flex;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.ai-message {
+  justify-content: flex-start;
+}
+
+.user-message {
+  justify-content: flex-end;
+}
+
+.message-bubble {
+  max-width: 80%;
+  padding: 12px 16px;
+  border-radius: 12px;
+  position: relative;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.ai-bubble {
+  background-color: white;
+  color: #1f2937;
+  border: 1px solid #e5e7eb;
+}
+
+.user-bubble {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.message-text {
+  line-height: 1.5;
   margin-bottom: 4px;
 }
 
-.detail-type {
-  color: #40c057;
-  font-size: 14px;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #e9ecef;
+.message-time {
+  font-size: 12px;
+  opacity: 0.7;
+  text-align: right;
 }
 
-.detail-section {
-  margin-bottom: 20px;
-}
-
-.detail-section h4 {
-  color: #555;
-  font-size: 16px;
-  margin-bottom: 12px;
-  display: flex;
-  align-items: center;
-}
-
-.detail-section h4::before {
-  content: '';
-  display: inline-block;
-  width: 4px;
-  height: 16px;
-  background-color: #40c057;
-  margin-right: 8px;
-  border-radius: 2px;
-}
-
-.property-list, .relation-list {
-  list-style: none;
-}
-
-.property-list li {
-  margin-bottom: 10px;
-  padding-bottom: 10px;
-  border-bottom: 1px dashed #f1f1f1;
-}
-
-.property-key {
-  display: inline-block;
-  width: 80px;
-  color: #666;
-  font-weight: 500;
-}
-
-.property-value {
-  color: #333;
-}
-
-.relation-list li {
-  margin-bottom: 12px;
-  padding: 8px;
-  background-color: #f8f9fa;
-  border-radius: 6px;
-}
-
-.relation-name {
-  color: #e53e3e;
-  font-weight: 500;
-  margin-right: 8px;
-}
-
-.relation-target {
-  color: #3182ce;
-  cursor: pointer;
-}
-
-.relation-target:hover {
-  text-decoration: underline;
-}
-
-.empty-state {
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #999;
-  font-size: 16px;
-}
-
-/* 控制栏样式 */
-.control-bar {
-  height: 60px;
-  background-color: #fff;
-  border-top: 1px solid #e9ecef;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 24px;
-}
-
-.control-group {
+/* 底部输入区域 */
+.bottom-input-area {
   display: flex;
   gap: 12px;
+  padding: 16px 20px;
+  border-top: 1px solid #e5e7eb;
+  background-color: white;
+  box-sizing: border-box;
+  animation: slideUp 0.3s ease-out;
 }
 
-.control-btn {
-  background-color: #ecf9ee;
-  color: #333;
+.bottom-message-input {
+  flex: 1;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 16px;
+  resize: none;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.bottom-message-input:focus {
+  outline: none;
+  border-color: #93c5fd;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.bottom-send-btn {
+  padding: 10px 20px;
+  background-color: #3b82f6;
+  color: white;
   border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
+  border-radius: 8px;
+  font-size: 16px;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
+  align-self: flex-end;
 }
 
-.control-btn:hover {
-  background-color: #40c057;
-  color: #fff;
+.bottom-send-btn:disabled {
+  background-color: #93c5fd;
+  cursor: not-allowed;
 }
 
-.layout-controls {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+.bottom-send-btn:not(:disabled):hover {
+  background-color: #2563eb;
 }
 
-.layout-label {
-  color: #666;
-  font-size: 14px;
+/* 动画 */
+@keyframes fadeIn {
+  from { 
+    opacity: 0;
+  }
+  to { 
+    opacity: 1;
+  }
 }
 
-.layout-select {
-  padding: 6px 12px;
-  border-radius: 4px;
-  border: 1px solid #ddd;
-  background-color: #fff;
+@keyframes slideUp {
+  from { 
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-/* 帮助弹窗样式 */
-.modal-backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
+/* 滚动条样式 */
+.chat-messages::-webkit-scrollbar {
+  width: 6px;
 }
 
-.modal {
-  width: 500px;
-  background-color: #fff;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+.chat-messages::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
 }
 
-.modal-header {
-  padding: 16px 24px;
-  background-color: #ecf9ee;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.chat-messages::-webkit-scrollbar-thumb {
+  background-color: #c1c1c1;
+  border-radius: 3px;
 }
 
-.modal-header h3 {
-  color: #333;
-  margin: 0;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  font-size: 20px;
-  cursor: pointer;
-  color: #666;
-}
-
-.modal-content {
-  padding: 24px;
-}
-
-.modal-content p {
-  margin-bottom: 12px;
-  line-height: 1.6;
+/* 响应式调整 */
+@media (max-width: 640px) {
+  .message-bubble {
+    max-width: 75%;
+  }
 }
 </style>

@@ -1,31 +1,6 @@
 <template>
   <div class="homepage">
     <!-- 导航栏 -->
-    <!-- <header class="header">
-      <router-link :to="{ path: '/' }">
-        <img class="logo" src="/static/img/Graph_Vocab.png" alt="Logo" />
-      </router-link>
-      
-      <nav class="main-nav">
-        <ul class="main-nav-list">
-          <li class="search-box">
-            <input 
-              class="search-txt" 
-              type="text" 
-              placeholder="搜索单词..." 
-              v-model="searchText"
-              @keyup.enter="handleSearch"
-            />
-            <button class="search-btn" @click="handleSearch">
-              <i class="icon-search"></i>
-            </button>
-          </li>
-          <li><router-link to="/main" class="main-nav-link">开始学习</router-link></li>
-          <li><a href="https://github.com/Nozom1466" class="main-nav-link">GitHub</a></li>
-          <li><router-link to="/login" class="main-nav-link nav-cta">登录</router-link></li>
-        </ul>
-      </nav>
-    </header> -->
     <Nvabar></Nvabar>
     <!-- 主内容区 -->
     <main class="main-content">
@@ -65,13 +40,6 @@
         </div>
       </section>
     </main>
-
-    <!-- 页脚 -->
-    <!-- <footer class="footer">
-      <div class="footer-content">
-        <p>2025 CQCFE</p>
-      </div>
-    </footer> -->
   </div>
 </template>
 

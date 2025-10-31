@@ -1,5 +1,7 @@
 <template>
   <div class="page-container">
+    <nvabar />
+
     <div class="shift-mode">
       <label class="search-label" for="searchID">疾病搜索词：</label>
       <input id="searchID" type="text" placeholder="例如：感冒" @keyup.enter="handleSearch" v-model="diseaseKeyword"
@@ -32,6 +34,7 @@
 <script>
 import * as d3 from 'd3';
 import axios from 'axios';
+import Nvabar from './nvabar.vue';
 
 export default {
   name: "MedicalNeo4jGraph",
@@ -39,17 +42,17 @@ export default {
     return {
       diseaseKeyword: "",
       relationList: [
-        { value: "show_all", label: "显示全部", desc: "test" },
-        { value: "acompany_with", label: "伴随", desc: "会伴随节点的疾病" },
-        { value: "belongs_to", label: "属于", desc: "test" },
-        { value: "common_drug", label: "常用药物", desc: "test" },
-        { value: "do_eat", label: "宜食", desc: "test" },
-        { value: "drugs_of", label: "药物", desc: "test" },
-        { value: "has_symptom", label: "有症状", desc: "test" },
-        { value: "need_check", label: "需要检查", desc: "test" },
-        { value: "no_eat", label: "忌食", desc: "test" },
-        { value: "recommand_drug", label: "推荐药物", desc: "test" },
-        { value: "recommand_eat", label: "推荐饮食", desc: "test" }
+        { value: "show_all", label: "显示全部", desc: "显示全部节点" },
+        { value: "acompany_with", label: "伴随", desc: "显示会伴随的疾病" },
+        { value: "belongs_to", label: "属于", desc: "显示属于的疾病" },
+        { value: "common_drug", label: "常用药物", desc: "显示所需药物" },
+        { value: "do_eat", label: "宜食", desc: "显示宜食的食物" },
+        { value: "drugs_of", label: "药物", desc: "显示药物的相关信息" },
+        { value: "has_symptom", label: "有症状", desc: "显示有症状的疾病" },
+        { value: "need_check", label: "需要检查", desc: "显示需要检查的项目" },
+        { value: "no_eat", label: "忌食", desc: "显示忌食的食物" },
+        { value: "recommand_drug", label: "推荐药物", desc: "显示推荐的药物" },
+        { value: "recommand_eat", label: "推荐饮食", desc: "显示推荐的饮食" }
       ],
       nodeCount: 0,
       edgeCount: 0,
@@ -273,6 +276,7 @@ export default {
       const { circle, edges_line } = this.d3Elements;
       this.nodeCount = circle ? circle.filter(function() { return d3.select(this).style("display") !== "none"; }).size() : 0;
       this.edgeCount = edges_line ? edges_line.filter(function() { return d3.select(this).style("display") !== "none"; }).size() : 0;
+      console.log(`节点数量: ${this.nodeCount},关系边数量: ${this.edgeCount}`)
     },
     highlightNode(nodeName) {
       // 高亮节点（绿色边框/放大）
@@ -291,6 +295,9 @@ export default {
         }
       });
     }
+  },
+  components:{
+    Nvabar
   }
 };
 </script>
@@ -371,7 +378,7 @@ export default {
 .sidebar {
   background-color: #ecf9ee;
   overflow-y: auto;
-  padding: 2rem 1rem;
+  padding: 4rem 2rem;
 }
 
 .relation-list {

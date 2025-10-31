@@ -3,25 +3,53 @@
 <template>
   <div class="chat-page">
     <Nvabar />
-    <div class="chat-container">
-      <div v-if="messages.length" class="chat-history">
-        <div v-for="(msg, idx) in messages" :key="idx" :class="msg.role === 'user' ? 'bubble user' : 'bubble ai'">
-          <!-- <span v-if="msg.role === 'user'" class="bubble-label">我：</span> -->
-          <span v-if="msg.role === 'ai'" class="bubble-label">医疗助手：</span>
-          <span v-html="msg.text"></span>
+    <transition name="fade-slide" mode="out-in">
+      <div v-if="messages.length === 0" class="pre-chat" key="pre">
+        <div class="pre-chat-msg">
+          <h2 class="pre-chat-msg-h2" ref="typeitElement"></h2>
+        </div>
+        <div class="pre-chat-input-container">
+          <textarea
+            v-model="input"
+            @keydown.enter.prevent="handleSend"
+            placeholder="输入咨询的相关问题..."
+            class="pre-chat-input"
+            rows="3"
+            ref="initialInput"
+          ></textarea>
+          <button 
+            @click="handleSend"
+            class="pre-chat-send-btn"
+            :disabled="!input.trim()"
+          >
+            发送
+          </button>
         </div>
       </div>
-      <div class="chat-input-bar">
-        <input v-model="input" type="text" placeholder="请输入你的问题..." @keyup.enter="handleSend" class="chat-input" />
-        <button class="send-btn" @click="handleSend">发送</button>
+      <div v-else class="chat-container" key="chat">
+        <div v-if="messages.length" class="chat-history">
+          <div v-for="(msg, idx) in messages" :key="idx" :class="msg.role === 'user' ? 'bubble user' : 'bubble ai'">
+            <span v-if="msg.role === 'ai'" class="bubble-label">医疗助手：</span>
+            <span v-if="msg.role === 'ai' && typing && idx === messages.length - 1" v-html="typingText"></span>
+            <span v-else v-html="msg.text"></span>
+          </div>
+        </div>
+        <div class="chat-input-bar">
+          <input v-model="input" type="text" placeholder="请输入你的问题..." @keyup.enter="handleSend" class="chat-input" />
+          <button class="send-btn" @click="handleSend">发送</button>
+        </div>
       </div>
-    </div>
+    </transition>
   </div>
 </template>
 
 <script>
 import axios from 'axios';
 import Nvabar from './nvabar.vue';
+import { ref, onMounted } from 'vue';
+import TypeIt from 'typeit';
+
+const typeitElement = ref(null);
 
 export default {
   name: 'chat',
@@ -29,17 +57,25 @@ export default {
   data() {
     return {
       input: '',
-      messages: []
+      messages: [],
+      typing: false,
+      typingText: '',
     };
   },
   mounted() {
-    // 拦截 vue-link-btn 的点击，改为 router 跳转
     this.$nextTick(() => {
       this.addLinkInterception();
+      this.$refs.initialInput?.focus();
+      new TypeIt(this.$refs.typeitElement, {
+        strings: ['👨‍⚕️输入你想咨询的问题'],
+        speed: 140,
+        loop: false,
+        breakLines: false,
+        cursor: false
+      }).go();
     });
   },
   updated() {
-    // 每次渲染后都重新绑定
     this.addLinkInterception();
   },
   methods: {
@@ -63,24 +99,80 @@ export default {
       if (!text) return;
       this.messages.push({ role: 'user', text });
       this.input = '';
+      this.typing = true;
+      this.typingText = '';
       try {
         const res = await axios.post('/api/ask', null, {
           params: { msg: text }
         });
-        this.messages.push({ role: 'ai', text: res.data.res });
+        await this.typeAiText(res.data.res);
+        this.typing = false;
         this.$nextTick(() => {
           const history = this.$el.querySelector('.chat-history');
           if (history) history.scrollTop = history.scrollHeight;
         });
       } catch (e) {
         this.messages.push({ role: 'ai', text: '网络错误，请稍后重试。' });
+        this.typing = false;
       }
+    },
+    async typeAiText(text) {
+      this.typingText = '';
+      for (let i = 0; i < text.length; i++) {
+        this.typingText += text[i];
+        await new Promise(r => setTimeout(r, 18));
+      }
+      this.messages.push({ role: 'ai', text: this.typingText });
+      this.typingText = '';
     }
   }
 };
 </script>
 
 <style scoped>
+.pre-chat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: calc(100vh - 60px);
+  background: linear-gradient(180deg, #ecf9ee 0%, #d4f0d9 100%);
+  padding: 20px;
+}
+
+.pre-chat-msg-h2 {
+  font-size: 32px;
+}
+
+.pre-chat-input-container {
+  margin-top: 20px;
+  width: 100%;
+  max-width: 600px;
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+}
+.pre-chat-input {
+  flex: 1;
+  padding: 12px;
+  font-size: 18px;
+  border: 2px solid #40c057;
+  border-radius: 8px;
+  resize: none;
+  outline: none;
+  box-shadow: 0 2px 8px rgba(34, 230, 93, 0.08);
+}
+.pre-chat-send-btn {
+  padding: 12px 24px;
+  background-color: #40c057;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 18px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
 .chat-page {
   min-height: 100vh;
   background: linear-gradient(180deg, #ecf9ee 0%, #d4f0d9 100%);
@@ -196,5 +288,17 @@ export default {
 .vue-link-btn:hover {
   background: #22c55e;
   color: #fff !important;
+}
+
+.fade-slide-enter-active, .fade-slide-leave-active {
+  transition: opacity 0.5s, transform 0.5s;
+}
+.fade-slide-enter-from, .fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(40px);
+}
+.fade-slide-leave-from, .fade-slide-enter-to {
+  opacity: 1;
+  transform: translateY(0);
 }
 </style>
