@@ -21,6 +21,10 @@
       </div>
 
       <div id="allmap" class="graph-container">
+        <div v-if="!links.length" class="tip-none">
+          <h2 class="tip-none-h2"> 暂无数据</h2>
+        </div>
+
         <div ref="chart"></div>
         <!-- <div class="info">
           节点数量: <span>{{ nodeCount }}</span><br>
@@ -180,7 +184,7 @@ export default {
         .attr("stroke", "#fff")
         .attr("stroke-width", 3)
         .style("cursor", "pointer")
-        .on("dblclick", node => this.navigateToNode(node.name))
+        // .on("dblclick", node => this.navigateToNode(node.name))
         .on("mouseover", function () { d3.select(this).attr("r", 34); })
         .on("mouseout", function () { d3.select(this).attr("r", 28); })
         .call(d3.drag()
@@ -416,6 +420,19 @@ export default {
   width: 100%;
   height: 100%;
   overflow: hidden;
+}
+
+.tip-none {
+  position: absolute;
+  top: 50%;
+  left: 55%;
+  transform: translate(-50%, -50%);
+}
+.tip-none-h2 {
+  color: #40c057;
+  font-size: 24px;
+  font-weight: 700;
+  opacity: 0.6;
 }
 
 .graph-content {

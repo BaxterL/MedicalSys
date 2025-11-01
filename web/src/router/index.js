@@ -24,11 +24,11 @@ const router = createRouter({
       name: 'chat',
       component: () => import('../pages/chat.vue'),
     },
-    {
-      path: '/test',
-      name: 'test',
-      component: () => import('../pages/test.vue'),
-    }
+    // {
+    //   path: '/test',
+    //   name: 'test',
+    //   component: () => import('../pages/test.vue'),
+    // }
   ],
 })
 
