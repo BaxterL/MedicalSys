@@ -1,4 +1,4 @@
-py2neo
+py2neo>=2024.1.1
 flask
 pymongo
 pyahocorasick

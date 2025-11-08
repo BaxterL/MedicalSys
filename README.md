@@ -25,7 +25,7 @@ https://neo4j.ac.cn/deployment-center/
 ```bash
 python -m venv .venv
 #linux
-source /.venv/Scripts/activate
+source .venv/bin/activate
 #windows
 \.venv\Scripts\activate.bat
 

@@ -21,11 +21,15 @@
       </div>
 
       <div id="allmap" class="graph-container">
+        <div v-if="links && nodeCount===0 && edgeCount===0">
+            <h2 class="tip-none-h2-other"> 节点数量为空</h2>
+        </div>
         <div v-if="!links.length" class="tip-none">
           <h2 class="tip-none-h2"> 暂无数据</h2>
         </div>
 
-        <div ref="chart"></div>
+        <div ref="chart">
+        </div>
         <!-- <div class="info">
           节点数量: <span>{{ nodeCount }}</span><br>
           关系边数量: <span>{{ edgeCount }}</span>
@@ -435,6 +439,15 @@ export default {
   opacity: 0.6;
 }
 
+.tip-none-h2-other{
+  color: #40c057;
+  font-size: 24px;
+  font-weight: 700;
+  opacity: 0.6;
+  position: absolute;
+  top: 48%;
+  left: 48%;
+}
 .graph-content {
   background: rgb(236, 249, 238);
   width: 100%;
