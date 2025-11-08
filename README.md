@@ -1,6 +1,6 @@
 # 改版
 
-小组丐板项目
+小组丐板项目，后续应该不会加东西了，偶尔修修bug
 
 # 依赖
 
@@ -37,18 +37,17 @@ vite
 ```
 ## 数据库数据
 
-linux服务器有自己去copy,账号密码群里有
-
-# todo
-
-继续美化，数据页还要美化一下
+原项目有数据，可以去下载
 
 # 启动
+
+启动neo4j服务器
+
 ```bash
 cd src
 python3 main.py
 
 cd ..
 cd web
-npx build
+vite build
 ```
