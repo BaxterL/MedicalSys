@@ -21,7 +21,7 @@
       </div>
 
       <div id="allmap" class="graph-container">
-        <div v-if="links && nodeCount===0 && edgeCount===0">
+        <div v-if="links.length && nodeCount===0 && edgeCount===0">
             <h2 class="tip-none-h2-other"> 节点数量为空</h2>
         </div>
         <div v-if="!links.length" class="tip-none">
@@ -313,6 +313,13 @@ export default {
 <style scoped lang="css">
 .page-container {
   background-color: #ecf9ee;
+}
+
+* {
+-webkit-user-select: none; /* Chrome, Safari, Opera */
+-moz-user-select: none; /* Firefox */
+-ms-user-select: none; /* Internet Explorer/Edge */
+user-select: none; /* Non-prefixed version, currently supported by Chrome, Opera, and Firefox */
 }
 
 * {
