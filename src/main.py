@@ -2,10 +2,28 @@ from flask import Flask,request,jsonify
 from py2neo import Graph
 from flask_cors import CORS
 from chatnet import ChatBotGraph
+import os
+from openai import OpenAI
+
 
 app = Flask(__name__)
 CORS(app)
 
+#doubao-1.5-pro-32k   openai类的一样的自己看着改
+client = OpenAI(
+    # 此为默认路径，您可根据业务所在地域进行配置
+    base_url="https://ark.cn-beijing.volces.com/api/v3",
+    # 从环境变量中获取您的 API Key
+    api_key=os.environ.get("ARK_API_KEY"),
+)
+completion = client.chat.completions.create(
+    # 指定您创建的方舟推理接入点 ID，此处已帮您修改为您的推理接入点 ID
+    model="doubao-1-5-pro-32k-character-250715",
+    messages=[
+        {"role": "system", "content": "你是人工智能助手"},
+        {"role": "user", "content": "你好"},
+    ],
+)
 
 # 连接到Neo4j数据库
 url = "bolt://localhost:7687"
@@ -50,6 +68,31 @@ def non_recursive_query(source, n, links):
             stack.append((target, depth - 1))
 
     return links
+
+def api_deepseek():
+    try:
+        data = request.get_json()
+        if not data or 'message' not in data:
+            return jsonify({
+                "error": "请求参数错误",
+                "message": "请提供包含'message'的JSON数据"
+            }), 400
+        
+        completion = client.chat.completions.create(
+            model="doubao-1-5-pro-32k-character-250715",
+            messages=data['message']
+        )
+        
+        return jsonify({
+            "success": True,
+            "response": completion.choices[0].message.content
+        })
+        
+    except Exception as e:
+        return jsonify({
+            "error": "服务器错误",
+            "message": str(e)
+        }), 500
 
 @app.route('/api/view')
 def api_view():

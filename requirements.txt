@@ -3,3 +3,5 @@ flask
 pymongo
 pyahocorasick
 flask-cors
+
+openai>=1.0

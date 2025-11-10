@@ -1,5 +1,3 @@
-<!-- 全AI生成的页面除了nvabar -->
-
 <template>
   <div class="chat-page">
     <Nvabar />
@@ -145,13 +143,40 @@ export default {
         };
       });
     },
+    async sendDeepseekMsg(text) {
+      try {
+        const messages = [
+          { role: "system", content: "你是人工智能助手" },
+          { role: "user", content: text }
+        ];
+
+        const res = await axios.post('/api/deepseek', { messages });
+
+        const aiResponse = res.data.success ? res.data.response : 'AI 响应异常';
+        await this.typeAiText(aiResponse);
+
+        this.typing = false;
+        this.$nextTick(() => {
+          const history = this.$el.querySelector('.chat-history');
+          if (history) history.scrollTop = history.scrollHeight;
+        });
+      } catch (e) {
+        this.messages.push({ role: 'bug', text: `错误：${e.message || '请求失败，请稍后重试'}` });
+        this.typing = false;
+      }
+    },
     async handleSend(text) {
+      this.isDeepseek = this.$refs.chatInputRef.isDeepseek;
       text = text?.trim() || '';
       if (!text) return;
       this.messages.push({ role: 'user', text });
       this.input = '';
       this.typing = true;
       this.typingText = '';
+      if (this.isDeepseek) {
+        await this.sendDeepseekMsg(text)
+        return
+      }
       try {
         const res = await axios.post('/api/ask', null, {
           params: { msg: text }
