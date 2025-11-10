@@ -141,7 +141,7 @@ export default {
 
 .pre-chat-input-container {
   width: 100%;
-  max-width: 600px;
+  max-width: 700px;
   display: flex;
   flex-direction: column;
   gap: 12px;

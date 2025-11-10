@@ -4,6 +4,7 @@ from flask_cors import CORS
 from chatnet import ChatBotGraph
 import os
 from openai import OpenAI
+from config import ARK_API_KEY
 
 
 app = Flask(__name__)
@@ -14,15 +15,7 @@ client = OpenAI(
     # 此为默认路径，您可根据业务所在地域进行配置
     base_url="https://ark.cn-beijing.volces.com/api/v3",
     # 从环境变量中获取您的 API Key
-    api_key=os.environ.get("ARK_API_KEY"),
-)
-completion = client.chat.completions.create(
-    # 指定您创建的方舟推理接入点 ID，此处已帮您修改为您的推理接入点 ID
-    model="doubao-1-5-pro-32k-character-250715",
-    messages=[
-        {"role": "system", "content": "你是人工智能助手"},
-        {"role": "user", "content": "你好"},
-    ],
+    api_key=ARK_API_KEY,
 )
 
 # 连接到Neo4j数据库
@@ -69,6 +62,7 @@ def non_recursive_query(source, n, links):
 
     return links
 
+@app.route('/api/deepseek', methods=['POST'])
 def api_deepseek():
     try:
         data = request.get_json()
@@ -77,12 +71,15 @@ def api_deepseek():
                 "error": "请求参数错误",
                 "message": "请提供包含'message'的JSON数据"
             }), 400
-        
+        msg = data['message']
+        medicalsys_msg = handler.chat_main(msg)
         completion = client.chat.completions.create(
             model="doubao-1-5-pro-32k-character-250715",
-            messages=data['message']
+            messages=[
+                {"role": "system", "content":"你是一个有人情味的智能医疗助手，基于提供的医疗知识图谱系统提供的信息回答问题，可以适当补充，确保专业准确，不编造信息"},
+                {"role": "user", "content": f"系统提供的医疗知识：f{medicalsys_msg}\n用户问题：{msg}"}
+            ]
         )
-        
         return jsonify({
             "success": True,
             "response": completion.choices[0].message.content
@@ -114,6 +111,7 @@ def api_ask():
         return jsonify({'msg': '', 'res': '未收到问题内容'}), 400
     res = handler.chat_main(msg)
     return jsonify({
+        'success': True,
         'msg': msg,
         'res': res
     }), 200

@@ -10,66 +10,43 @@
       </div>
       <div v-else class="chat-container" key="chat">
         <div v-if="messages.length" class="chat-history">
-          <div v-for="(msg, idx) in messages" :key="idx" :class="msg.role === 'user' ? 'bubble user' : 'bubble ai'">
-            <span v-if="msg.role === 'ai'" class="bubble-label">医疗助手：</span>
-            <span v-if="msg.role === 'ai' && typing && idx === messages.length - 1" v-html="typingText"></span>
-            <span v-else v-html="msg.text"></span>
+          <div v-for="msg in messages" :key="msg.id" :class="getBubbleClass(msg.role)">
+            <template v-if="msg.role === 'user'">
+              <span v-html="msg.text"></span>
+            </template>
+            <template v-else-if="msg.role === 'ai'">
+              <span class="bubble-label">医疗助手：</span>
+              <span v-if="msg.renderMode === 'html'" v-html="typing && isLastMsg(msg) ? typingText : msg.text"></span>
+
+              <MarkdownRender v-else-if="msg.renderMode === 'markdown'"
+                :content="typing && isLastMsg(msg) ? typingText : msg.text" />
+              <!-- <component 
+                :is="isSmartMode ? 'MarkdownRender' : 'span'"
+                v-bind="isSmartMode 
+                  ? { content: typing && idx === messages.length - 1 ? typingText : msg.text} 
+                  : { vHtml: typing && idx === messages.length - 1 ? typingText : msg.text}"
+                v-html="isSmartMode
+                  ? { content: typing && idx === messages.length - 1 ? typingText : msg.text}
+                  : { vHtml: typing && idx === messages.length - 1 ? typingText : msg.text}"
+                :content="!isSmartMode ? (typing && idx === messages.length - 1 ? typingText : msg.text) : undefined"
+              /> -->
+            </template>
+            <template v-else-if="msg.role === 'loading'">
+              <div class="loading">
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+              </div>
+            </template>
+            <template v-else-if="msg.role === 'bug'">
+              <span class="bubble-label">报错信息：</span>
+              <span v-html="msg.text" style="color: #ff4d4f;"></span>
+            </template>
           </div>
         </div>
         <inputchat v-model="input" @send="handleSend" ref="chatInputRef" />
-        <!-- <div class="pre-chat-input-container">
-          <div class="chatc-up">
-            <textarea v-model="input" @keydown.enter.prevent="handleSend" placeholder="发送消息" class="pre-chat-input"
-              rows="3" ref="initialInput"></textarea>
-          </div>
-          <div class="chatc-down">
-            <div style="flex: 1 1;"></div>
-            <div class="chatc-tools">
-              <div class="chatc-tools-button">
-                <button @click="handleSend" class="pre-chat-send-btn" :disabled="!input.trim()" aria-label="">
-                  <span style="display: flex;align-items: center; justify-content: center;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="none" viewBox="0 0 24 24">
-                      <path fill="currentColor"
-                        d="m3.543 8.883 7.042-7.047a2 2 0 0 1 2.828 0l7.043 7.046a1 1 0 0 1 0 1.415l-.701.701a1 1 0 0 1-1.414 0L13.3 5.956v15.792a1 1 0 0 1-1 1h-.99a1 1 0 0 1-1-1V6.342l-4.654 4.656a1 1 0 0 1-1.414 0l-.7-.7a1 1 0 0 1 0-1.415">
-                      </path>
-                    </svg>
-                  </span>
-                </button>
-              </div>
-            </div>
-          </div>
-          </div> -->
       </div>
-      <!-- <div v-else class="chat-container" key="chat">
-        <div v-if="messages.length" class="chat-history">
-          <div v-for="(msg, idx) in messages" :key="idx" :class="msg.role === 'user' ? 'bubble user' : 'bubble ai'">
-            <span v-if="msg.role === 'ai'" class="bubble-label">医疗助手：</span>
-            <span v-if="msg.role === 'ai' && typing && idx === messages.length - 1" v-html="typingText"></span>
-            <span v-else v-html="msg.text"></span>
-          </div>
-        </div>
-        <div class="chat-input-bar">
-          <div class="chatc-up">
-            <input v-model="input" type="text" placeholder="请输入你的问题..." @keyup.enter="handleSend" class="chat-input" />
-          </div>
-          <div class="chatc-down">
-            <div style="flex: 1 1;"></div>
-            <div class="chatc-tools">
-              <div class="chatc-tools-button">
-                <button class="send-btn" @click="handleSend" :disabled="!input.trim()">
-                  <span style="display: flex;align-items: center; justify-content: center;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="none" viewBox="0 0 24 24">
-                      <path fill="currentColor"
-                        d="m3.543 8.883 7.042-7.047a2 2 0 0 1 2.828 0l7.043 7.046a1 1 0 0 1 0 1.415l-.701.701a1 1 0 0 1-1.414 0L13.3 5.956v15.792a1 1 0 0 1-1 1h-.99a1 1 0 0 1-1-1V6.342l-4.654 4.656a1 1 0 0 1-1.414 0l-.7-.7a1 1 0 0 1 0-1.415">
-                      </path>
-                    </svg>
-                  </span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div> -->
     </transition>
   </div>
 </template>
@@ -77,21 +54,32 @@
 <script>
 import axios from 'axios';
 import Nvabar from './nvabar.vue';
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, render } from 'vue';
 import TypeIt from 'typeit';
 import inputchat from './inputchat.vue';
+import MarkdownRender from 'vue-renderer-markdown';
 
 const typeitElement = ref(null);
 
 export default {
   name: 'chat',
-  components: { Nvabar, inputchat },
+  components: { Nvabar, inputchat, MarkdownRender },
+  computed: {
+    getBubbleClass() {
+      return (role) => {
+        if (role === 'user') return 'bubble user';
+        if (role === 'loading') return 'bubble ai loading-bubble';
+        return 'bubble ai';
+      };
+    }
+  },
   data() {
     return {
       input: '',
       messages: [],
       typing: false,
       typingText: '',
+      isSmartMode: false,
     };
   },
   mounted() {
@@ -128,6 +116,12 @@ export default {
       var titleText = `👨‍⚕️${state}，有什么我可以帮助你的吗？`
       return titleText
     },
+    isLastMsg(msg) {
+      return this.messages[this.messages.length - 1] === msg && this.typing;
+    },
+    clearLoadingMessages() {
+      this.messages = this.messages.filter(msg => msg.role !== 'loading');
+    },
     addLinkInterception() {
       // 只拦截 .vue-link-btn 链接
       const container = this.$el.querySelector('.chat-history');
@@ -143,17 +137,32 @@ export default {
         };
       });
     },
+    isHtml(text) {
+      return /<[^>]+>/.test(text);
+    },
+    pushMsg(role, text, render) {
+      const msg = { role, text, id: Date.now() + Math.random() };
+      if (render && role !== 'loading') {
+        msg.renderMode = render;
+      }
+      this.messages.push(msg);
+    },
     async sendDeepseekMsg(text) {
+      const loadingMsgId = this.messages.length;
+      // this.messages.push({ role: 'loading', text: '' })
+      // const render = this.isSmartMode ? 'markdown' : 'html'
+      this.pushMsg('loading', '', 'markdown')
       try {
-        const messages = [
-          { role: "system", content: "你是人工智能助手" },
-          { role: "user", content: text }
-        ];
+        const res = await axios.post('/api/deepseek', {
+          message: text
+        })
 
-        const res = await axios.post('/api/deepseek', { messages });
-
-        const aiResponse = res.data.success ? res.data.response : 'AI 响应异常';
-        await this.typeAiText(aiResponse);
+        this.messages.splice(loadingMsgId, 1)
+        if (res.data.success) {
+          await this.typeAiText(res.data.response, 'markdown')
+        } else {
+          console.log(`msg:${res.data.message}`)
+        }
 
         this.typing = false;
         this.$nextTick(() => {
@@ -161,51 +170,252 @@ export default {
           if (history) history.scrollTop = history.scrollHeight;
         });
       } catch (e) {
-        this.messages.push({ role: 'bug', text: `错误：${e.message || '请求失败，请稍后重试'}` });
+        this.clearLoadingMessages()
+        // this.messages.push({ role: 'ai', text: `错误：${e.message || '请求失败，请稍后重试'}` ,render: 'html'});
+        this.pushMsg('ai', `错误：${e.message || '请求失败，请稍后重试'}`, 'html')
         this.typing = false;
       }
     },
     async handleSend(text) {
-      this.isDeepseek = this.$refs.chatInputRef.isDeepseek;
+      this.isSmartMode = this.$refs.chatInputRef.isSmartMode;
       text = text?.trim() || '';
       if (!text) return;
-      this.messages.push({ role: 'user', text });
+      const render = this.isSmartMode ? 'markdown' : 'html'
+      // this.messages.push({ role: 'user', text,renderMode: render});
+      this.pushMsg('user', text, render)
       this.input = '';
       this.typing = true;
       this.typingText = '';
-      if (this.isDeepseek) {
+      if (this.isSmartMode) {
         await this.sendDeepseekMsg(text)
         return
       }
       try {
+        const loadingMsgId = this.messages.length
+        // this.messages.push(
+        //   { role: 'loading', 
+        //   text: '',
+        // })
+        this.pushMsg('loading', '', render)
         const res = await axios.post('/api/ask', null, {
           params: { msg: text }
         });
-        await this.typeAiText(res.data.res);
+
+        // this.messages.splice(loadingMsgId, 1)
+        // await this.typeAiText(res.data.res);
+        if (res.data.success) {
+          this.messages.splice(loadingMsgId, 1)
+          // await this.typeAiText(res.data.res)
+          await this.typeAiText(res.data.res, render)
+        } else {
+          this.messages.splice(loadingMsgId, 1)
+          console.log(`msg:${res.data.message}`)
+          // this.messages.push({ role: 'bug', text: res.data.message })
+        }
+
         this.typing = false;
         this.$nextTick(() => {
           const history = this.$el.querySelector('.chat-history');
           if (history) history.scrollTop = history.scrollHeight;
         });
       } catch (e) {
-        this.messages.push({ role: 'ai', text: '网络错误，请稍后重试。' });
+        this.clearLoadingMessages()
+        // this.messages.push({ role: 'ai', text: '网络错误，请稍后重试。' ,red});
+        this.pushMsg('ai', '网络错误，请稍后重试。', 'html')
         this.typing = false;
       }
     },
-    async typeAiText(text) {
-      this.typingText = '';
-      for (let i = 0; i < text.length; i++) {
-        this.typingText += text[i];
-        await new Promise(r => setTimeout(r, 18));
-      }
-      this.messages.push({ role: 'ai', text: this.typingText });
-      this.typingText = '';
+    async typeAiText(text, render) {
+      // 这是啥傻逼bug我真他妈服了
+      // this.typingText = '';
+      // for (let i = 0; i < text.length; i++) {
+      //   this.typingText += text[i];
+      //   await new Promise(r => setTimeout(r, 18));
+      // }
+      // this.messages.push({ role: 'ai', text: this.typingText });
+      // this.typingText = '';
+      this.typingText = text
+      //   this.messages.push({ role: 'ai', 
+      //   text: this.typingText,
+      //   renderMode: render
+      // })
+      this.pushMsg('ai', this.typingText, render)
+      this.typingText = ''
+    },
+    newTypeAiText(text) {
     }
   }
 };
 </script>
 
 <style scoped>
+/* loading-bubble*/
+.loading-bubble {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+}
+
+.loading-bubble .loading {
+  margin-top: 0;
+}
+
+/* loading */
+.loading,
+.loading>div {
+  position: relative;
+  box-sizing: border-box;
+}
+
+.loading {
+  display: block;
+  font-size: 0;
+  color: #40c057;
+}
+
+.loading.la-dark {
+  color: #40c057;
+}
+
+.loading>div {
+  display: inline-block;
+  float: none;
+  background-color: currentColor;
+  border: 0 solid currentColor;
+}
+
+.loading {
+  width: 40px;
+  height: 10px;
+}
+
+.loading>div {
+  width: 10px;
+  height: 10px;
+  border-radius: 100%;
+}
+
+.loading>div:first-child {
+  transform: translateX(0%);
+  animation: ball-newton-cradle-left 1s 0s ease-out infinite;
+}
+
+.loading>div:last-child {
+  transform: translateX(0%);
+  animation: ball-newton-cradle-right 1s 0s ease-out infinite;
+}
+
+.loading.la-sm {
+  width: 20px;
+  height: 4px;
+}
+
+.loading.la-sm>div {
+  width: 4px;
+  height: 4px;
+}
+
+.loading.la-2x {
+  width: 80px;
+  height: 20px;
+}
+
+.loading.la-2x>div {
+  width: 20px;
+  height: 20px;
+}
+
+.loading.la-3x {
+  width: 120px;
+  height: 30px;
+}
+
+.loading.la-3x>div {
+  width: 30px;
+  height: 30px;
+}
+
+@keyframes ball-newton-cradle-left {
+  25% {
+    transform: translateX(-100%);
+    animation-timing-function: ease-in;
+  }
+
+  50% {
+    transform: translateX(0%);
+  }
+}
+
+@keyframes ball-newton-cradle-right {
+  50% {
+    transform: translateX(0%);
+  }
+
+  75% {
+    transform: translateX(100%);
+    animation-timing-function: ease-in;
+  }
+
+  100% {
+    transform: translateX(0%);
+  }
+}
+
+/* loading */
+
+.semi-button {
+  padding: 8px 12px;
+  background-color: #b7e4c7;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.2s;
+  height: 70%;
+  -webkit-user-select: none;
+  /*webkit浏览器*/
+  -moz-user-select: none;
+  /*火狐*/
+  -ms-user-select: none;
+  /*IE10*/
+  user-select: none;
+}
+
+.semi-button:hover {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(183, 228, 199, 0.5);
+}
+
+.semi-button.active {
+  background-color: #40c057;
+  /* 找不到好看的颜色 */
+  color: white;
+  /* box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.2); */
+}
+
+.semi-button-content {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.semi-button-content-right {
+  margin-left: 4px;
+  font-size: 16px;
+}
+
+.semi-icon {
+  display: inline-block;
+  font-style: normal;
+  line-height: 0;
+  text-align: center;
+  text-rendering: optimizeLegibility;
+  text-transform: none;
+  fill: currentColor;
+}
+
+/* inputchat */
 .pre-chat {
   display: flex;
   flex-direction: column;
@@ -220,47 +430,7 @@ export default {
   font-size: 32px;
 }
 
-.pre-chat-input-container {
-  margin-top: 20px;
-  width: 100%;
-  max-width: 600px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  background-color: #fff;
-  padding: 12px;
-  border-radius: 14px;
-}
-
-.chatc-down {
-  align-items: flex-end;
-  display: flex;
-}
-
-.pre-chat-input {
-  width: 96%;
-  flex: 1;
-  padding: 12px;
-  font-size: 18px;
-  /* border: 2px solid #40c057; */
-  /* border-radius: 8px; */
-  border: none;
-  resize: none;
-  outline: none;
-  box-shadow: 0 2px 8px rgba(34, 230, 93, 0.08);
-}
-
-.pre-chat-send-btn {
-  padding: 12px 24px;
-  background-color: #40c057;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 18px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
+/* 这是啥bug */
 .chat-page {
   min-height: 100vh;
   background: linear-gradient(180deg, #ecf9ee 0%, #d4f0d9 100%);
