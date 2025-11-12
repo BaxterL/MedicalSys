@@ -4,7 +4,7 @@
       <!-- 左侧 Logo 和文字 -->
       <div class="logo-container" @click="goHome">
         <img src="/static/img/Medical_Graph.png" alt="Graph logo" class="logo-icon" />
-        <span class="logo-text">MedicalGraph</span>
+        <span class="logo-text">医疗助手</span>
       </div>
 
       <nav class="menu-nav">
@@ -40,8 +40,8 @@ import {
   HomeIcon,
   ChatBubbleLeftRightIcon,
   ChartBarIcon,
-  // DatabaseIcon,
-  CodeBracketIcon
+  CodeBracketIcon,
+  CircleStackIcon
 } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
@@ -53,17 +53,17 @@ const closeDrawer = () => (isOpen.value = false)
 const goHome = () => router.push('/')
 
 const menuItems = [
-  { key: 'overview', label: '项目概览', icon: HomeIcon, path: '/introduce' },
-  { key: 'chat', label: '智能问答', icon: ChatBubbleLeftRightIcon, path: '/chat' },
-  { key: 'graph', label: '知识图谱', icon: ChartBarIcon, path: '/main' },
-  // { key: 'db', label: '数据中心', icon: DatabaseIcon, path: '/database' },
-  {
+  { key: 'overview', label: '主页', icon: HomeIcon, path: '/introduce' },
+  { key: 'chat', label: '助手', icon: ChatBubbleLeftRightIcon, path: '/chat' },
+  { key: 'graph', label: '图谱', icon: ChartBarIcon, path: '/main' },
+    {
     key: 'repo',
-    label: '开源仓库',
+    label: '代码',
     icon: CodeBracketIcon,
     path: 'https://github.com/BaxterL/MedicalSys',
     external: true
-  }
+  },
+  { key: 'db', label: '数据库', icon: CircleStackIcon, path: 'http://localhost:7474' ,external: true}
 ]
 
 const navigate = (item) => {
@@ -163,8 +163,8 @@ const navigate = (item) => {
   z-index: 2000;
 }
 .drawer {
-  background: #fff;
-  width: 280px;
+  background: #ecf9ee;
+  width: 180px;
   height: 100%;
   padding: 60px 24px 24px;
   box-shadow: -2px 0 12px rgba(0, 0, 0, 0.1);
@@ -216,11 +216,10 @@ const navigate = (item) => {
   transform: translateX(100%);
 }
 
-/* ────────────────────── 响应式 ────────────────────── */
 @media (max-width: 768px) {
   .menu-container { padding: 0 15px; }
   .logo-text { font-size: 1.2rem; }
   .logo-icon { height: 32px; }
-  .drawer { width: 260px; }
+  .drawer { width: 180px; }
 }
 </style>

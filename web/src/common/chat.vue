@@ -4,12 +4,12 @@
 
 <script setup>
 import { computed } from 'vue';
-import PCindex from '../pages/index.vue';
-import mobileIndex from '../mobile/index.vue';
+import PCpage from '../pages/chat.vue';
+import mobilePage from '../mobile/chat.vue';
 import {useDeviceDetection } from '../device'
 const { isMobile } = useDeviceDetection();
 
 const curComponent = computed(() => {
-  return isMobile.value ? mobileIndex : PCindex;
+  return isMobile.value ? mobilePage : PCpage;
 });
 </script>

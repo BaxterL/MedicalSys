@@ -34,7 +34,7 @@
             </p>
             <div class="action-buttons">
               <router-link to="/chat" class="btn primary-btn">开始使用</router-link>
-              <router-link to="/main" class="btn outline-btn">数据可视化</router-link>
+              <router-link to="/main" class="btn outline-btn">图谱数据</router-link>
             </div>
           </div>
         </div>
