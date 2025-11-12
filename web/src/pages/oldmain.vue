@@ -3,13 +3,8 @@
     <nvabar />
     <div class="sidebar">
       <ul class="relation-list">
-        <li
-          v-for="relation in relationList"
-          :key="relation.value"
-          class="relation-item"
-          :class="{ active: selectedRelation === relation.value }"
-          @click="handleRelationClick(relation.value)"
-        >
+        <li v-for="relation in relationList" :key="relation.value" class="relation-item"
+          :class="{ active: selectedRelation === relation.value }" @click="handleRelationClick(relation.value)">
           <h2>{{ relation.label }}</h2>
           <p class="desc">{{ relation.desc }}</p>
         </li>
@@ -36,16 +31,11 @@
         </svg>
       </button>
     </div>
+
     <div class="search-bar">
       <label for="searchID" class="search-label">疾病搜索词：</label>
-      <input
-        id="searchID"
-        type="text"
-        placeholder="例如：感冒"
-        v-model="diseaseKeyword"
-        @keyup.enter="handleSearch"
-        class="search-input"
-      />
+      <input id="searchID" type="text" placeholder="例如：感冒" v-model="diseaseKeyword" @keyup.enter="handleSearch"
+        class="search-input" />
       <button class="search-btn" @click="handleSearch">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
           <circle cx="11" cy="11" r="8" />
@@ -56,7 +46,7 @@
     </div>
     <div class="graph-wrapper">
       <div id="allmap" class="graph-container" ref="chart">
-        <div v-if="links.length && nodeCount===0 && edgeCount===0" class="tip-none-other">
+        <div v-if="links.length && nodeCount === 0 && edgeCount === 0" class="tip-none-other">
           <h2>节点数量为空</h2>
         </div>
         <div v-if="!links.length" class="tip-none">
@@ -85,11 +75,11 @@ export default {
         { value: 'belongs_to', label: '属于', desc: '显示属于的疾病' },
         { value: 'common_drug', label: '常用药物', desc: '显示所需药物' },
         { value: 'do_eat', label: '宜食', desc: '显示宜食的食物' },
-        { value: 'drugs_of', label: '药物', desc: '显示药物的相关信息' },
+        // { value: 'drugs_of', label: '药物', desc: '显示药物的相关信息' },
         { value: 'has_symptom', label: '有症状', desc: '显示有症状的疾病' },
         { value: 'need_check', label: '需要检查', desc: '显示需要检查的项目' },
         { value: 'no_eat', label: '忌食', desc: '显示忌食的食物' },
-        { value: 'recommand_drug', label: '推荐药物', desc: '显示推荐的药物' },
+        { value: 'recommand_drug', label: '药物', desc: '显示推荐的药物' },
         { value: 'recommand_eat', label: '推荐饮食', desc: '显示推荐的饮食' }
       ],
       nodeCount: 0,
@@ -97,7 +87,12 @@ export default {
       links: [],
       nodes: {},
       svg: null,
-      d3Elements: {},
+      d3Elements: {
+        circle: null,
+        text: null,
+        edges_line: null,
+        edges_text: null
+      },
       zoom: null,
       relationshipMap: {
         'acompany_with': '伴随',
@@ -134,207 +129,177 @@ export default {
       }
       this.renderGraph();
     },
+
     handleSearch() {
       this.fetchGraphData();
     },
+
     handleRelationClick(val) {
       this.selectedRelation = val;
       if (val === 'show_all') this.toggleAll();
       else this.toggleRelationship(val);
     },
+
     zoomIn() {
+      if (!this.zoom) return;
       this.zoom.scaleBy(this.svg.transition().duration(300), 1.3);
     },
     zoomOut() {
+      if (!this.zoom) return;
       this.zoom.scaleBy(this.svg.transition().duration(300), 0.7);
     },
     resetView() {
+      if (!this.zoom) return;
       this.svg.transition().duration(500).call(
         this.zoom.transform,
-        d3.zoomIdentity.translate(-800, -600).scale(1)
+        d3.zoomIdentity.translate(1500, 900).scale(1)
       );
     },
+
     renderGraph() {
-      // 清空原有svg
-      if (this.svg) {
-        this.svg.remove();
-      }
+      if (this.svg) this.svg.remove();
       this.nodes = {};
       this.links.forEach(link => {
         link.source = this.nodes[link.source] || (this.nodes[link.source] = { name: link.source });
         link.target = this.nodes[link.target] || (this.nodes[link.target] = { name: link.target });
       });
+
       const width = 3000, height = 1800;
-      // 绿色简约配色
-      const colorList = ["#40c057", "#2da143", "#b9e7c3", "#d4f0d9", "#ebfbee", "#8b4513", "#a3e635", "#bef264", "#bbf7d0", "#22c55e"];
+      const colorList = ['#40c057','#2da143','#b9e7c3','#d4f0d9','#ebfbee','#8b4513','#a3e635','#bef264','#bbf7d0','#22c55e'];
       const color = i => colorList[i % colorList.length];
+
       const nodesArr = Object.values(this.nodes);
-      const linksArr = this.links.map(l => ({...l, source: l.source, target: l.target}));
-      // d3-force模拟，减小排斥力，节点分布更轻松
+      const linksArr = this.links.map(l => ({ ...l }));
+
       const simulation = d3.forceSimulation(nodesArr)
-        .force("link", d3.forceLink(linksArr).distance(220).id(d => d.name))
-        .force("charge", d3.forceManyBody().strength(-350))
-        .force("center", d3.forceCenter(width / 2, height / 2));
-      // 支持缩放和平移
+        .force('link', d3.forceLink(linksArr).distance(220).id(d => d.name))
+        .force('charge', d3.forceManyBody().strength(-350))
+        .force('center', d3.forceCenter(width / 2, height / 2));
+
       this.svg = d3.select(this.$refs.chart)
-        .append("svg")
-        .attr("width", width)
-        .attr("height", height);
+        .append('svg')
+        .attr('width', width)
+        .attr('height', height);
+
+      const g = this.svg.append('g');
+
       this.zoom = d3.zoom()
-        .scaleExtent([0.2, 2])
-        .on("zoom", function (event) {
-          g.attr("transform", event.transform);
-        });
+        .scaleExtent([0.2, 3])
+        .on('zoom', ({ transform }) => g.attr('transform', transform));
       this.svg.call(this.zoom);
-      // 主g容器
-      const g = this.svg.append("g");
-      // 边
-      const edges_line = g.append('g')
-        .attr('class', 'edges')
-        .selectAll(".edgepath")
-        .data(linksArr)
-        .enter()
-        .append("line")
-        .attr("stroke", "#40c057")
-        .attr("stroke-width", 2);
-      // 边文本
-      const edges_text = g.append("g")
-        .attr('class', 'edge-text')
-        .selectAll(".edgelabel")
-        .data(linksArr)
-        .enter()
-        .append("text")
-        .attr("font-size", 18)
-        .attr("fill", "#22c55e")
+
+      const edges_line = g.append('g').attr('class','edges')
+        .selectAll('line').data(linksArr).enter().append('line')
+        .attr('stroke', '#40c057').attr('stroke-width', 2);
+
+      const edges_text = g.append('g').attr('class','edge-text')
+        .selectAll('text').data(linksArr).enter().append('text')
+        .attr('font-size',18).attr('fill','#22c55e')
         .text(d => this.relationshipMap[d.rela] || '');
-      // 节点
-      const circle = g.append("g").selectAll("circle")
-        .data(nodesArr)
-        .enter().append("circle")
-        .attr("r", 28)
-        .attr("fill", (d, i) => color(i))
-        .attr("stroke", "#fff")
-        .attr("stroke-width", 3)
-        .style("cursor", "pointer")
-        // .on("dblclick", node => this.navigateToNode(node.name))
-        .on("mouseover", function () { d3.select(this).attr("r", 34); })
-        .on("mouseout", function () { d3.select(this).attr("r", 28); })
+
+      const circle = g.append('g').selectAll('circle')
+        .data(nodesArr).enter().append('circle')
+        .attr('r',28).attr('fill',(d,i)=>color(i))
+        .attr('stroke','#fff').attr('stroke-width',3)
+        .style('cursor','pointer')
+        .on('mouseover', d => d3.select(d3.event.currentTarget).attr('r',34))
+        .on('mouseout',  d => d3.select(d3.event.currentTarget).attr('r',28))
         .call(d3.drag()
-          .on("start", function(event, d) {
-            if (!event.active) simulation.alphaTarget(0.2).restart();
-            d.fx = d.x;
-            d.fy = d.y;
-          })
-          .on("drag", function(event, d) {
-            d.fx = event.x;
-            d.fy = event.y;
-          })
-          .on("end", function(event, d) {
-            if (!event.active) simulation.alphaTarget(0);
-            d.fx = null;
-            d.fy = null;
-          })
+          .on('start', (e,d) => { if (!e.active) simulation.alphaTarget(.2).restart(); d.fx=d.x; d.fy=d.y; })
+          .on('drag',  (e,d) => { d.fx=e.x; d.fy=e.y; })
+          .on('end',   (e,d) => { if (!e.active) simulation.alphaTarget(0); d.fx=null; d.fy=null; })
         );
-      // 节点文本
-      const text = g.append("g").selectAll("text.node-label")
-        .data(nodesArr)
-        .enter()
-        .append("text")
-        .attr("class", "node-label")
-        .attr("font-size", 18)
-        .attr("fill", "#1e293b")
-        .attr("font-weight", "bold")
-        .attr("text-anchor", "middle")
-        .text(d => d.name);
-      // tick函数
-      simulation.on("tick", () => {
-        circle.attr("cx", d => d.x = Math.max(40, Math.min(width - 40, d.x)))
-              .attr("cy", d => d.y = Math.max(40, Math.min(height - 40, d.y)));
-        text.attr("x", d => d.x)
-            .attr("y", d => d.y + 6);
-        edges_line.attr("x1", d => d.source.x)
-                  .attr("y1", d => d.source.y)
-                  .attr("x2", d => d.target.x)
-                  .attr("y2", d => d.target.y);
-        edges_text.attr("x", d => (d.source.x + d.target.x) / 2)
-                  .attr("y", d => (d.source.y + d.target.y) / 2 - 10);
-        this.updateCounts();
+
+      const text = g.append('g').selectAll('text.node-label')
+        .data(nodesArr).enter().append('text')
+        .attr('class','node-label')
+        .attr('font-size',18).attr('fill','#1e293b')
+        .attr('font-weight','bold').attr('text-anchor','middle')
+        .text(d=>d.name);
+
+      simulation.on('tick', () => {
+        circle.attr('cx', d=>d.x=Math.max(40,Math.min(width-40,d.x)))
+              .attr('cy', d=>d.y=Math.max(40,Math.min(height-40,d.y)));
+        text.attr('x',d=>d.x).attr('y',d=>d.y+6);
+        edges_line.attr('x1',d=>d.source.x).attr('y1',d=>d.source.y)
+                  .attr('x2',d=>d.target.x).attr('y2',d=>d.target.y);
+        edges_text.attr('x',d=>(d.source.x+d.target.x)/2)
+                  .attr('y',d=>(d.source.y+d.target.y)/2-10);
+        this.updateCounts();  // 每 tick 更新一次
       });
-      // 保存d3元素引用
+
+      // 保存引用
       this.d3Elements = { circle, text, edges_line, edges_text };
-      this.updateCounts();
+      this.updateCounts(); // 初始更新
     },
-    // AI转换的函数我不会别找我
-    navigateToNode(nodeName) {
-      window.open("https://baike.baidu.com/item/" + nodeName, "_blank");
-    },
-    // AI转换的函数我不会别找我
-    toggleRelationship(relationship) {
-      const { edges_line, edges_text, circle, text } = this.d3Elements;
-      // 找到相关边
-      const relatedEdges = edges_line.filter(d => d.rela === relationship);
-      // 相关节点
-      const relatedNodes = new Set();
-      relatedEdges.each(edge => {
-        relatedNodes.add(edge.source.name);
-        relatedNodes.add(edge.target.name);
-      });
-      // 隐藏所有
-      edges_line.style("display", "none");
-      edges_text.style("display", "none");
-      circle.style("display", "none");
-      text.style("display", "none");
-      // 显示相关边
-      relatedEdges.style("display", "inline");
-      // 显示相关边的文本
-      edges_text.filter(function(d) {
-        return relatedEdges.filter(function(edge) {
-          return edge.source === d.source && edge.target === d.target;
-        }).size() > 0;
-      }).style("display", "inline");
-      // 显示相关节点
-      circle.filter(d => relatedNodes.has(d.name)).style("display", "inline");
-      text.filter(d => relatedNodes.has(d.name)).style("display", "inline");
-      this.updateCounts();
-      console.log(`节点数量: ${this.nodeCount},关系边数量: ${this.edgeCount}`)
-    },
-    // AI转换的函数我不会别找我
-    toggleAll() {
-      const { edges_line, edges_text, circle, text } = this.d3Elements;
-      const isHidden = edges_line.style("display") === "none";
-      const newDisplayState = isHidden ? "inline" : "none";
-      edges_line.style("display", newDisplayState);
-      edges_text.style("display", newDisplayState);
-      circle.style("display", newDisplayState);
-      text.style("display", newDisplayState);
-      this.updateCounts();
-    },
+
+    // 关键修复：使用 datum 绑定，避免 this 指向错误
     updateCounts() {
       const { circle, edges_line } = this.d3Elements;
-      this.nodeCount = circle ? circle.filter(function() { return d3.select(this).style("display") !== "none"; }).size() : 0;
-      this.edgeCount = edges_line ? edges_line.filter(function() { return d3.select(this).style("display") !== "none"; }).size() : 0;
+
+      if (!circle || !edges_line) {
+        this.nodeCount = 0;
+        this.edgeCount = 0;
+        return;
+      }
+
+      this.nodeCount = circle.filter(d => {
+        const el = d3.select(this); // this 是 DOM 元素
+        return el.style('display') !== 'none';
+      }).size();
+
+      this.edgeCount = edges_line.filter(d => {
+        const el = d3.select(this);
+        return el.style('display') !== 'none';
+      }).size();
     },
-    highlightNode(nodeName) {
-      // 高亮节点（绿色边框/放大）
+
+    toggleRelationship(rel) {
+      const { edges_line, edges_text, circle, text } = this.d3Elements;
+      const related = edges_line.filter(d => d.rela === rel);
+      const nodesSet = new Set();
+      related.each(e => { nodesSet.add(e.source.name); nodesSet.add(e.target.name); });
+
+      edges_line.style('display','none');
+      edges_text.style('display','none');
+      circle.style('display','none');
+      text.style('display','none');
+
+      related.style('display','inline');
+      edges_text.filter(d => related.filter(e => e.source===d.source && e.target===d.target).size()>0)
+                .style('display','inline');
+      circle.filter(d => nodesSet.has(d.name)).style('display','inline');
+      text.filter(d => nodesSet.has(d.name)).style('display','inline');
+
+      this.updateCounts();
+    },
+
+    toggleAll() {
+      const { edges_line, edges_text, circle, text } = this.d3Elements;
+      const hidden = edges_line.style('display') === 'none';
+      const disp = hidden ? 'inline' : 'none';
+      edges_line.style('display',disp);
+      edges_text.style('display',disp);
+      circle.style('display',disp);
+      text.style('display',disp);
+      this.updateCounts();
+    },
+
+    highlightNode(name) {
       if (!this.d3Elements.circle) return;
-      this.d3Elements.circle.each(function(d) {
-        if (d.name === nodeName) {
-          d3.select(this)
-            .attr('stroke', '#22c55e')
-            .attr('stroke-width', 8)
-            .attr('r', 38);
-        } else {
-          d3.select(this)
-            .attr('stroke', '#fff')
-            .attr('stroke-width', 3)
-            .attr('r', 28);
+      this.d3Elements.circle.each(function(d){
+        const sel = d3.select(this);
+        if (d.name===name){
+          sel.attr('stroke','#22c55e').attr('stroke-width',8).attr('r',38);
+        }else{
+          sel.attr('stroke','#fff').attr('stroke-width',3).attr('r',28);
         }
       });
     }
   }
 };
 </script>
-
+<!-- AI美化的 -->
 <style scoped lang="scss">
 $page-bg: #f8fff9;
 $primary: #40c057;
