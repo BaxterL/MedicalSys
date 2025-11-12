@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import index from '../pages/index.vue'
+
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -7,7 +7,12 @@ const router = createRouter({
     {
       path: '/',
       name: 'index',
-      component: index,
+      component: () => import('../common/index.vue')
+      // component: {
+      //   default: () => import('../common/index.vue'),
+      //   pc: () => import('../pages/index.vue'),
+      //   mobile: () => import('../mobile/index.vue')
+      // }
     },
     {
       path: '/main',

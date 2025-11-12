@@ -12,6 +12,13 @@ export default defineConfig({
     vueJsx(),
     vueDevTools(),
   ],
+  build: {
+    rollupOptions: {
+      input: {
+        'pc': resolve(__dirname, 'src/main-pc.ts'),
+      }
+    }
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))

@@ -37,7 +37,7 @@ vite
 ```
 ## 数据库数据
 
-原项目有数据，可以去下载
+原项目有数据，可以去[下载](https://github.com/jiqiu123/KG-VAQSystemOnMedical-master/tree/data)
 
 # 启动
 
