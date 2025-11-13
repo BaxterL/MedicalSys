@@ -198,7 +198,7 @@ p {
 /* 主内容区 */
 .main-content {
   background-color: #ebfbee;
-  /* padding: 60px 0; */
+  padding: 60px 0;
 }
 
 .hero-section {

@@ -53,7 +53,7 @@ const closeDrawer = () => (isOpen.value = false)
 const goHome = () => router.push('/')
 
 const menuItems = [
-  { key: 'overview', label: '主页', icon: HomeIcon, path: '/introduce' },
+  { key: 'overview', label: '主页', icon: HomeIcon, path: '/' },
   { key: 'chat', label: '助手', icon: ChatBubbleLeftRightIcon, path: '/chat' },
   { key: 'graph', label: '图谱', icon: ChartBarIcon, path: '/main' },
     {

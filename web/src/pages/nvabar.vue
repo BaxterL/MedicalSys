@@ -1,6 +1,6 @@
 <template>
   <header class="navbar">
-    <div class="navbar-left">
+    <div class="navbar-left" @click="goHome" style="cursor: pointer;">
       <!-- <span class="navbar-title">医疗助手</span> -->
        <img src="/static/img/Medical_Graph.png" alt="Graph logo" class="logo"/>
     </div>
@@ -20,10 +20,18 @@
   </header>
 </template>
 
-<script>
-export default {
-  name: 'Navbar'
+<script setup>
+import { useRouter } from 'vue-router';
+
+const router = useRouter()
+
+const goHome = () => {
+  router.push('/')
 }
+
+// export default {
+//   name: 'Navbar'
+// }
 </script>
 
 <style scoped>
@@ -31,6 +39,7 @@ export default {
 
 .logo {
   height: 80px;
+  width: auto;
 }
 
 .navbar {
