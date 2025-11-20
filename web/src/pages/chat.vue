@@ -433,7 +433,8 @@ export default {
 /* 这是啥bug */
 .chat-page {
   min-height: 100vh;
-  background: linear-gradient(180deg, #ecf9ee 0%, #d4f0d9 100%);
+  /* background: linear-gradient(180deg, #ecf9ee 0%, #d4f0d9 100%); */
+  background: #ecf9ee;
   display: flex;
   flex-direction: column;
 }

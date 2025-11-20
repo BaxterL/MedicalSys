@@ -85,7 +85,7 @@ export default {
         { value: 'belongs_to', label: '属于', desc: '显示属于的疾病' },
         { value: 'common_drug', label: '常用药物', desc: '显示所需药物' },
         { value: 'do_eat', label: '宜食', desc: '显示宜食的食物' },
-        { value: 'drugs_of', label: '药物', desc: '显示药物的相关信息' },
+        // { value: 'drugs_of', label: '药物', desc: '显示药物的相关信息' },
         { value: 'has_symptom', label: '有症状', desc: '显示有症状的疾病' },
         { value: 'need_check', label: '需要检查', desc: '显示需要检查的项目' },
         { value: 'no_eat', label: '忌食', desc: '显示忌食的食物' },
@@ -104,7 +104,7 @@ export default {
         'belongs_to': '属于',
         'common_drug': '常用药物',
         'do_eat': '宜食',
-        'drugs_of': '药物',
+        //'drugs_of': '药物',
         'has_symptom': '有症状',
         'need_check': '需要检查',
         'no_eat': '忌食',
@@ -264,11 +264,9 @@ export default {
       this.d3Elements = { circle, text, edges_line, edges_text };
       this.updateCounts();
     },
-    // AI转换的函数我不会别找我
     navigateToNode(nodeName) {
       window.open("https://baike.baidu.com/item/" + nodeName, "_blank");
     },
-    // AI转换的函数我不会别找我
     toggleRelationship(relationship) {
       const { edges_line, edges_text, circle, text } = this.d3Elements;
       // 找到相关边
@@ -298,7 +296,6 @@ export default {
       this.updateCounts();
       console.log(`节点数量: ${this.nodeCount},关系边数量: ${this.edgeCount}`)
     },
-    // AI转换的函数我不会别找我
     toggleAll() {
       const { edges_line, edges_text, circle, text } = this.d3Elements;
       const isHidden = edges_line.style("display") === "none";

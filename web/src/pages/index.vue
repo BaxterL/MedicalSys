@@ -9,7 +9,7 @@
           <div class="hero-image-box grid--5-cols grid--5-rows">
             <!-- 第一张图片 -->
             <div class="hero-img hero-img-1">
-              <img src="/static/img/hero1.png" alt="词汇学习插图1" class="hero-img" />
+              <img src="/static/img/hero1.png" class="hero-img" />
             </div>
 
             <!-- 星期显示 -->
@@ -20,7 +20,7 @@
 
             <!-- 第二张图片 -->
             <div class="hero-img hero-img-2">
-              <img src="/static/img/hero2.png" alt="词汇学习插图2" class="hero-img" />
+              <img src="/static/img/hero2.png" class="hero-img" />
             </div>
           </div>
 
