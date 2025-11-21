@@ -422,7 +422,8 @@ export default {
   align-items: center;
   justify-content: center;
   height: calc(100vh - 60px);
-  background: linear-gradient(180deg, #ecf9ee 0%, #d4f0d9 100%);
+  /* background: linear-gradient(180deg, #ecf9ee 0%, #d4f0d9 100%); */
+  background: #ecf9ee;
   padding: 20px;
 }
 
