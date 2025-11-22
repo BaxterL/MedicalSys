@@ -54,8 +54,8 @@ vite build
 
 # 图片展示
 
-[首页](./img/index.png)
+![首页](./img/index.png)
 
-[数据页](./img/main.png)
+![数据页](./img/main.png)
 
-[咨询页](./img/chat.png)
+![咨询页](./img/chat.png)
