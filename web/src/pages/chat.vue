@@ -486,7 +486,7 @@ export default {
   color: #1e293b;
   align-self: flex-start;
   border-bottom-left-radius: 4px;
-  border: 1.5px solid #40c057;
+  /* border: 1.5px solid #40c057; */
 }
 
 .bubble-label {
@@ -590,7 +590,8 @@ export default {
 .vue-link-btn {
   display: inline-block;
   background: #40c057;
-  color: #fff !important;
+  /* color: #fff !important; */
+  color: #40c057;
   border-radius: 8px;
   padding: 6px 18px;
   margin: 0 4px;

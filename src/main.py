@@ -21,7 +21,7 @@ client = OpenAI(
 # 连接到Neo4j数据库
 url = "bolt://localhost:7687"
 username = "neo4j"
-password = "20060917"
+password = "password"
 graph = Graph(url, auth=(username, password))
 
 handler = ChatBotGraph()

@@ -41,6 +41,6 @@
 
 ### 开启您的健康之旅
 
-有任何问题都可以反馈至wangzj_baxter@outlook.com邮箱
+有任何问题都可以反馈至your_email@url.url邮箱
 
 ##### 感谢您的支持
